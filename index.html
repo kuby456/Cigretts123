@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>מעקב סיגריות ושכטות</title>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+  <header class="app-header">
+    <h1>מעקב סיגריות ושכטות</h1>
+  </header>
+
+  <main class="container">
+    <section class="card">
+      <h2>הגדרת יעדים</h2>
+      <div class="grid">
+        <label>
+          יעד דקות בין סיגריה לסיגריה
+          <input id="targetMinutes" type="number" min="1" step="1" placeholder="לדוגמה: 55"/>
+        </label>
+        <label>
+          יעד שכטות לסיגריה
+          <input id="targetPuffs" type="number" min="0" step="1" placeholder="לדוגמה: 8"/>
+        </label>
+      </div>
+      <button id="saveTargets" class="btn primary">שמור יעדים</button>
+    </section>
+
+    <section class="card">
+      <h2>פעולות</h2>
+      <div class="actions">
+        <button id="wantToSmoke" class="btn">אני רוצה לעשן</button>
+        <button id="didSmoke" class="btn success">עישנתי עכשיו</button>
+        <button id="resetAll" class="btn danger">איפוס נתונים</button>
+      </div>
+      <p id="advice" class="advice"></p>
+    </section>
+
+    <section class="card">
+      <h2>סטטוס נוכחי</h2>
+      <div class="stats">
+        <div><strong>מס׳ סיגריות:</strong> <span id="statCount">0</span></div>
+        <div><strong>ממוצע דקות בפועל:</strong> <span id="statAvgMinutes">—</span></div>
+        <div><strong>ממוצע שכטות בפועל:</strong> <span id="statAvgPuffs">—</span></div>
+        <div><strong>זמן מאז הסיגריה האחרונה:</strong> <span id="sinceLast">—</span></div>
+        <div><strong>יעד דקות:</strong> <span id="targetMinutesView">—</span></div>
+        <div><strong>יעד שכטות:</strong> <span id="targetPuffsView">—</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>הסבר קצר</h2>
+      <ol class="notes">
+        <li>בלחיצה על <em>“עישנתי עכשיו”</em> תתבקש/י להזין כמה שכטות לקחת. אם זו סיגריה ראשונה, מתחילים ספירה מעכשיו.</li>
+        <li>בלחיצה על <em>“אני רוצה לעשן”</em> תראה/י כמה זמן כדאי לחכות עכשיו כדי להגיע ליעד הדקות, וכמה שכטות כדאי לקחת בסיגריה הבאה כדי להגיע ליעד השכטות.</li>
+        <li>החישוב לדקות מתבסס על: <code>X = T*(N+1) - M</code><br/>
+          T=יעד דקות, N=מס׳ סיגריות עד עכשיו, M=סכום הדקות שנצברו עד עכשיו. </li>
+        <li>לחישוב שכטות בסיגריה הבאה: <code>p_next = S*(N+1) - P</code><br/>
+          S=יעד שכטות, P=סכום השכטות עד עכשיו.</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <small>נשמר אוטומטית ב-LocalStorage.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
