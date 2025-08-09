@@ -37,13 +37,23 @@
       <p id="advice" class="advice"></p>
     </section>
 
+
+
     <section class="card">
       <h2>סטטוס נוכחי</h2>
       <div class="stats">
         <div><strong>מס׳ סיגריות:</strong> <span id="statCount">0</span></div>
-        <div><strong>ממוצע דקות בפועל:</strong> <span id="statAvgMinutes">—</span></div>
+        <div>
+  <strong>ממוצע דקות בפועל:</strong>
+  <span id="statAvgMinutes">—</span>
+  <span class="muted">(<span id="statAvgMinutesWords">—</span>)</span>
+</div>
         <div><strong>ממוצע שכטות בפועל:</strong> <span id="statAvgPuffs">—</span></div>
-        <div><strong>זמן מאז הסיגריה האחרונה:</strong> <span id="sinceLast">—</span></div>
+        <div>
+  <strong>זמן מאז הסיגריה האחרונה:</strong>
+  <span id="sinceLast">—</span>
+  <span class="muted">(<span id="sinceLastWords">—</span>)</span>
+</div>
         <div><strong>יעד דקות:</strong> <span id="targetMinutesView">—</span></div>
         <div><strong>יעד שכטות:</strong> <span id="targetPuffsView">—</span></div>
       </div>
@@ -59,6 +69,16 @@
         <li>לחישוב שכטות בסיגריה הבאה: <code>p_next = S*(N+1) - P</code><br/>
           S=יעד שכטות, P=סכום השכטות עד עכשיו.</li>
       </ol>
+    </section>
+    
+    <section class="card">
+      <h2>מעגל יומי (08:00 → 08:00)</h2>
+      <div class="stats">
+        <div><strong>טווח המעגל:</strong> <span id="cycleWindow">—</span></div>
+        <div><strong>זמן עד סיום המעגל:</strong> <span id="cycleCountdown">—</span></div>
+        <div><strong>מס׳ סיגריות במעגל הנוכחי:</strong> <span id="cycleCount">0</span></div>
+      </div>
+      <small class="advice">המעגל מתאפס אוטומטית כל יום בשעה 08:00 לפי שעון המכשיר.</small>
     </section>
   </main>
 
