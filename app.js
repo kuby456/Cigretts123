@@ -77,6 +77,22 @@ function requiredWaitMinutes(){
   return T * (N + 1) - M;
 }
 
+function totalWaitTarget(){
+  // סך ה"זמן היעד" למרווח הנוכחי: מקס(T, T*(N+1) - M)
+  const strict = requiredWaitMinutes();           // בלי הזמן שעבר כרגע
+  const T = Number(state.targetMinutes) || 0;
+  if(strict == null || T <= 0) return null;
+  return Math.max(T, strict);
+}
+
+function remainingWaitNow(){
+  // כמה נשאר לחכות מעכשיו: total - elapsed
+  const total = totalWaitTarget();
+  if(total == null) return null;
+  const elapsed = Math.max(0, minutesSince(state.lastSmokeAt) || 0);
+  return Math.max(0, total - elapsed);
+}
+
 function fullDebtWaitDisplay(){
   // מציגים תמיד: T + החוב המלא
   // החוב המלא = requiredWaitMinutes() - T (אם חיובי)
@@ -131,16 +147,15 @@ el.saveTargets.addEventListener("click", () => {
 });
 
 el.wantToSmoke.addEventListener("click", () => {
-  const waitShow  = fullDebtWaitDisplay();   // T + החוב המלא (או לפחות T)
-  const nextPuffs = requiredNextPuffs();
+  const waitRemain = remainingWaitNow();   // כמה נשאר לחכות ממש עכשיו
+  const nextPuffs  = requiredNextPuffs();
 
   let lines = [];
 
-  if(waitShow === null){
+  if(waitRemain === null){
     lines.push("לא הוגדר יעד דקות. קבע יעד כדי לקבל זמן המתנה מומלץ.");
   }else{
-    // מציגים רק את המספר הכולל, בלי פירוט חישוב
-    lines.push(`מומלץ לחכות ~ ${fmt(waitShow, 0)} דקות.`);
+    lines.push(`מומלץ לחכות ~ ${fmt(waitRemain, 0)} דקות.`);
   }
 
   if(nextPuffs === null){
