@@ -23,7 +23,6 @@ function saveState(s){
   localStorage.setItem(KEY, JSON.stringify(s));
 }
 
-// --- UI elements ---
 const el = {
   targetMinutes: document.getElementById("targetMinutes"),
   targetPuffs: document.getElementById("targetPuffs"),
@@ -38,9 +37,18 @@ const el = {
   sinceLast: document.getElementById("sinceLast"),
   targetMinutesView: document.getElementById("targetMinutesView"),
   targetPuffsView: document.getElementById("targetPuffsView"),
+
+  // חדשים:
+  cycleWindow: document.getElementById("cycleWindow"),
+  cycleCountdown: document.getElementById("cycleCountdown"),
+  cycleCount: document.getElementById("cycleCount"),
+  statAvgMinutesWords: document.getElementById("statAvgMinutesWords"),
+  sinceLastWords: document.getElementById("sinceLastWords"),
 };
 
 let state = loadState();
+// מיגרציה לשדות חדשים:
+if (!state.smokeLog) state.smokeLog = []; // מערך של אירועי עישון { ts, puffs }
 
 // --- Derived helpers ---
 function now(){ return Date.now(); }
@@ -55,6 +63,10 @@ function fmt(n, digits=1){
   return Number(n).toFixed(digits);
 }
 
+function wordsOrDash(mins){
+  if(mins === null || mins === undefined || Number.isNaN(mins)) return "—";
+  return minutesToWords(mins);
+}
 function computeAvgMinutes(){
   if(state.count === 0) return null;
   return state.minutesSum / state.count; // לפי השיטה שסיכמנו: מחלקים במס' הסיגריות
@@ -77,7 +89,7 @@ function minutesToWords(totalMinutes) {
   }
   return parts.join(" ו");
 }
-// הוסף פונקציה חדשה אחרי computeAvgMinutes()
+
 
 
 function computeAvgPuffs(){
@@ -132,7 +144,6 @@ function requiredNextPuffs(){
   return S * (N + 1) - P;
 }
 
-// --- Render ---
 function render(){
   // inputs
   el.targetMinutes.value = state.targetMinutes ?? "";
@@ -140,10 +151,17 @@ function render(){
 
   // stats
   el.statCount.textContent = state.count;
+
+  // ממוצע דקות — גם מספר וגם במילים
   el.statAvgMinutes.textContent = fmt(computeAvgMinutes());
+  el.statAvgMinutesWords.textContent = wordsOrDash(computeAvgMinutes());
+
   el.statAvgPuffs.textContent = fmt(computeAvgPuffs());
+
+  // זמן מאז הסיגריה האחרונה — גם מספר וגם במילים
   const since = minutesSince(state.lastSmokeAt);
   el.sinceLast.textContent = since === null ? "—" : fmt(since);
+  el.sinceLastWords.textContent = wordsOrDash(since);
 
   el.targetMinutesView.textContent = state.targetMinutes ?? "—";
   el.targetPuffsView.textContent = state.targetPuffs ?? "—";
@@ -200,6 +218,9 @@ el.didSmoke.addEventListener("click", () => {
 
   const t = now();
 
+  // לוג חדש של עישון
+state.smokeLog.push({ ts: t, puffs });
+  
   if(state.count === 0){
     // סיגריה ראשונה: מתחילים ספירה, אין מרווח להוסיף
     state.count = 1;
@@ -228,23 +249,88 @@ el.resetAll.addEventListener("click", () => {
     return;
   }
   state = {
-    targetMinutes: state.targetMinutes, // אפשר להשאיר יעדים אם תרצה
+    targetMinutes: state.targetMinutes, // שומר יעדים
     targetPuffs: state.targetPuffs,
     count: 0,
     minutesSum: 0,
     puffsSum: 0,
-    lastSmokeAt: null
+    lastSmokeAt: null,
+    smokeLog: [] // ← אם אתה רוצה לאפס גם את הלוג
   };
   saveState(state);
   render();
+  updateCycleUI(); // ← כדי שהמעגל יתעדכן מיד אחרי האיפוס
   el.advice.textContent = "נמחקו הנתונים. היעדים נשארו.";
 });
+  
+setInterval(updateCycleUI, 1_000);
 
+function getCycleStartTimeMs(refDate = new Date()){
+  // אם עכשיו לפני 08:00 — תחילת המעגל היא אתמול ב־08:00, אחרת היום ב־08:00.
+  const d = new Date(refDate);
+  const y = d.getFullYear();
+  const m = d.getMonth();
+  const day = d.getDate();
+
+  const eightAMToday = new Date(y, m, day, 8, 0, 0, 0).getTime();
+  const nowMs = d.getTime();
+
+  if (nowMs >= eightAMToday) {
+    return eightAMToday; // 08:00 היום
+  } else {
+    // אתמול 08:00
+    const yesterday = new Date(y, m, day - 1, 8, 0, 0, 0).getTime();
+    return yesterday;
+  }
+}
+
+function getCycleEndTimeMs(startMs){
+  return startMs + 24 * 60 * 60 * 1000; // +24 שעות
+}
+
+function formatHMS(ms){
+  let total = Math.max(0, Math.floor(ms / 1000));
+  const h = Math.floor(total / 3600); total -= h * 3600;
+  const m = Math.floor(total / 60);   total -= m * 60;
+  const s = total;
+  const pad = n => String(n).padStart(2, "0");
+  return `${pad(h)}:${pad(m)}:${pad(s)}`;
+}
+
+function formatCycleWindow(startMs, endMs){
+  const s = new Date(startMs);
+  const e = new Date(endMs);
+  const optDay = { weekday: 'short' }; // לא חובה
+  const pad = n => String(n).padStart(2, "0");
+  const sLabel = `${pad(s.getHours())}:${pad(s.getMinutes())} ${s.toLocaleDateString()}`;
+  const eLabel = `${pad(e.getHours())}:${pad(e.getMinutes())} ${e.toLocaleDateString()}`;
+  return `${sLabel} → ${eLabel}`;
+}
+
+function countSmokesInWindow(startMs, endMs){
+  if (!Array.isArray(state.smokeLog)) return 0;
+  return state.smokeLog.reduce((acc, ev) => {
+    return acc + (ev.ts >= startMs && ev.ts < endMs ? 1 : 0);
+  }, 0);
+}
+
+function updateCycleUI(){
+  const start = getCycleStartTimeMs();
+  const end = getCycleEndTimeMs(start);
+  const left = Math.max(0, end - now());
+
+  // עדכוני UI
+  if (el.cycleWindow)   el.cycleWindow.textContent   = formatCycleWindow(start, end);
+  if (el.cycleCountdown) el.cycleCountdown.textContent = formatHMS(left);
+  if (el.cycleCount)    el.cycleCount.textContent    = countSmokesInWindow(start, end);
+}
 // טיימר קטן שמעדכן "מאז הסיגריה האחרונה"
 setInterval(() => {
   const since = minutesSince(state.lastSmokeAt);
   el.sinceLast.textContent = since === null ? "—" : fmt(since);
+  el.sinceLastWords.textContent = wordsOrDash(since);
 }, 10_000);
 
 // init
 render();
+updateCycleUI();
