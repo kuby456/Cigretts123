@@ -60,6 +60,38 @@
     </section>
 
     <section class="card">
+  <h2>ריצה — טיימר וסטטיסטיקות</h2>
+
+  <div class="actions">
+    <button id="runStart" class="btn primary">התחל ריצה</button>
+    <button id="runStop" class="btn danger">עצור ריצה</button>
+  </div>
+
+  <div class="stats" style="margin-top:8px">
+    <div><strong>טיימר ריצה נוכחי:</strong> <span id="runTimer">—</span></div>
+    <div><strong>ממוצע זמן ריצה:</strong>
+      <span id="runAvgMinutes">—</span>
+      <span class="muted">(<span id="runAvgWords">—</span>)</span>
+    </div>
+    <div><strong>מס' ריצות סה"כ:</strong> <span id="runTotalCount">0</span></div>
+    <div><strong>מס' ריצות השבוע:</strong> <span id="runWeekCount">0</span></div>
+  </div>
+
+  <small class="advice">
+    ספירת "השבוע" מתאפסת בכל יום ראשון ב-00:00 לפי שעון המכשיר.
+  </small>
+</section>
+    <section class="card">
+      <h2>מעגל יומי (08:00 → 08:00)</h2>
+      <div class="stats">
+        <div><strong>טווח המעגל:</strong> <span id="cycleWindow">—</span></div>
+        <div><strong>זמן עד סיום המעגל:</strong> <span id="cycleCountdown">—</span></div>
+        <div><strong>מס׳ סיגריות במעגל הנוכחי:</strong> <span id="cycleCount">0</span></div>
+      </div>
+      <small class="advice">המעגל מתאפס אוטומטית כל יום בשעה 08:00 לפי שעון המכשיר.</small>
+    </section>
+    
+    <section class="card">
       <h2>הסבר קצר</h2>
       <ol class="notes">
         <li>בלחיצה על <em>“עישנתי עכשיו”</em> תתבקש/י להזין כמה שכטות לקחת. אם זו סיגריה ראשונה, מתחילים ספירה מעכשיו.</li>
@@ -69,16 +101,6 @@
         <li>לחישוב שכטות בסיגריה הבאה: <code>p_next = S*(N+1) - P</code><br/>
           S=יעד שכטות, P=סכום השכטות עד עכשיו.</li>
       </ol>
-    </section>
-    
-    <section class="card">
-      <h2>מעגל יומי (08:00 → 08:00)</h2>
-      <div class="stats">
-        <div><strong>טווח המעגל:</strong> <span id="cycleWindow">—</span></div>
-        <div><strong>זמן עד סיום המעגל:</strong> <span id="cycleCountdown">—</span></div>
-        <div><strong>מס׳ סיגריות במעגל הנוכחי:</strong> <span id="cycleCount">0</span></div>
-      </div>
-      <small class="advice">המעגל מתאפס אוטומטית כל יום בשעה 08:00 לפי שעון המכשיר.</small>
     </section>
   </main>
 
