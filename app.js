@@ -44,11 +44,26 @@ const el = {
   cycleCount: document.getElementById("cycleCount"),
   statAvgMinutesWords: document.getElementById("statAvgMinutesWords"),
   sinceLastWords: document.getElementById("sinceLastWords"),
+  // ----- ריצה -----
+  runStart: document.getElementById("runStart"),
+  runStop: document.getElementById("runStop"),
+  runTimer: document.getElementById("runTimer"),
+  runAvgMinutes: document.getElementById("runAvgMinutes"),
+  runAvgWords: document.getElementById("runAvgWords"),
+  runTotalCount: document.getElementById("runTotalCount"),
+  runWeekCount: document.getElementById("runWeekCount"),
 };
 
 let state = loadState();
 // מיגרציה לשדות חדשים:
-if (!state.smokeLog) state.smokeLog = []; // מערך של אירועי עישון { ts, puffs }
+
+// מיגרציה לשדות חדשים קיימת כבר:
+if (!state.smokeLog) state.smokeLog = []; // מערך אירועי עישון { ts, puffs }
+
+// === ריצה: לוג ונקודת התחלה לריצה פעילה ===
+if (!state.runLog) state.runLog = [];           // [{ startMs, endMs, durMs }]
+if (!('currentRunStartMs' in state)) state.currentRunStartMs = null;
+// מערך של אירועי עישון { ts, puffs }
 
 // --- Derived helpers ---
 function now(){ return Date.now(); }
@@ -90,7 +105,51 @@ function minutesToWords(totalMinutes) {
   return parts.join(" ו");
 }
 
+// ===== ריצה: עזרי זמן וחישובים =====
+function formatHMSms(ms){
+  // כמו formatHMS אך מקבל מילישניות
+  return formatHMS(ms);
+}
 
+function weekStartMs(ref = new Date()){
+  // שבוע מתחיל ביום ראשון 00:00
+  const d = new Date(ref);
+  const dow = d.getDay(); // 0=Sunday
+  const diff = dow;       // כמה ימים לחזור אחורה עד ראשון
+  const y = d.getFullYear(), m = d.getMonth(), day = d.getDate();
+  const start = new Date(y, m, day - diff, 0, 0, 0, 0);
+  return start.getTime();
+}
+
+function runAvgMinutes(){
+  if (!state.runLog.length) return null;
+  const totalMs = state.runLog.reduce((a, r) => a + (r.durMs || 0), 0);
+  return totalMs / 60000 / state.runLog.length;
+}
+
+function runsThisWeek(){
+  const ws = weekStartMs();
+  return state.runLog.reduce((acc, r) => acc + (r.startMs >= ws ? 1 : 0), 0);
+}
+
+function renderRun(){
+  // טיימר נוכחי
+  if (state.currentRunStartMs){
+    const elapsed = Date.now() - state.currentRunStartMs;
+    if (el.runTimer) el.runTimer.textContent = formatHMSms(elapsed);
+  } else {
+    if (el.runTimer) el.runTimer.textContent = "—";
+  }
+
+  // ממוצע זמן ריצה
+  const avg = runAvgMinutes();
+  if (el.runAvgMinutes) el.runAvgMinutes.textContent = avg == null ? "—" : fmt(avg);
+  if (el.runAvgWords)   el.runAvgWords.textContent   = avg == null ? "—" : minutesToWords(avg);
+
+  // סה"כ והשבוע
+  if (el.runTotalCount) el.runTotalCount.textContent = state.runLog.length;
+  if (el.runWeekCount)  el.runWeekCount.textContent  = runsThisWeek();
+}
 
 function computeAvgPuffs(){
   if(state.count === 0) return null;
@@ -142,6 +201,41 @@ function requiredNextPuffs(){
   const N = Number(state.count);
   const P = Number(state.puffsSum);
   return S * (N + 1) - P;
+}
+
+// טיימר חי לריצה — רענון פעם בשנייה
+setInterval(() => {
+  if (state.currentRunStartMs && el.runTimer){
+    const elapsed = Date.now() - state.currentRunStartMs;
+    el.runTimer.textContent = formatHMSms(elapsed);
+  }
+  if (el.runWeekCount) el.runWeekCount.textContent = runsThisWeek();
+}, 1000);
+
+renderRun();
+
+// ===== ריצה: התחלה/עצירה =====
+if (el.runStart) {
+  el.runStart.addEventListener("click", () => {
+    if (state.currentRunStartMs) return;
+    state.currentRunStartMs = Date.now();
+    saveState(state);
+    renderRun();
+    if (el.advice) el.advice.textContent = "יצאת לריצה — בהצלחה!";
+  });
+}
+
+if (el.runStop) {
+  el.runStop.addEventListener("click", () => {
+    if (!state.currentRunStartMs) { alert("לא התחלת ריצה."); return; }
+    const end = Date.now();
+    const dur = Math.max(0, end - state.currentRunStartMs);
+    state.runLog.push({ startMs: state.currentRunStartMs, endMs: end, durMs: dur });
+    state.currentRunStartMs = null;
+    saveState(state);
+    renderRun();
+    if (el.advice) el.advice.textContent = "הריצה נשמרה. כל הכבוד!";
+  });
 }
 
 function render(){
@@ -245,22 +339,24 @@ state.smokeLog.push({ ts: t, puffs });
 });
 
 el.resetAll.addEventListener("click", () => {
-  if(!confirm("לאפס את כל הנתונים?")){
-    return;
-  }
+  if(!confirm("לאפס את כל הנתונים?")) return;
   state = {
-    targetMinutes: state.targetMinutes, // שומר יעדים
+    targetMinutes: state.targetMinutes,
     targetPuffs: state.targetPuffs,
     count: 0,
     minutesSum: 0,
     puffsSum: 0,
     lastSmokeAt: null,
-    smokeLog: [] // ← אם אתה רוצה לאפס גם את הלוג
+    smokeLog: [],
+    // שומרים את הריצה
+    runLog: state.runLog,
+    currentRunStartMs: state.currentRunStartMs
   };
   saveState(state);
   render();
-  updateCycleUI(); // ← כדי שהמעגל יתעדכן מיד אחרי האיפוס
-  el.advice.textContent = "נמחקו הנתונים. היעדים נשארו.";
+  renderRun();
+  updateCycleUI();
+  el.advice.textContent = "נמחקו נתוני העישון. נתוני הריצה נשמרו.";
 });
   
 setInterval(updateCycleUI, 1_000);
