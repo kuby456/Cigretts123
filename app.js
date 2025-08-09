@@ -60,6 +60,19 @@ function computeAvgMinutes(){
   return state.minutesSum / state.count; // לפי השיטה שסיכמנו: מחלקים במס' הסיגריות
 }
 
+// הוסף פונקציה חדשה אחרי computeAvgMinutes()
+function splitWaitIfLarge(wait){
+  const avg = computeAvgMinutes();
+  if(wait == null || !Number.isFinite(wait)) return wait;
+  if(avg == null || !Number.isFinite(avg) || avg <= 0) return wait;
+
+  const r = wait / avg;                 // יחס בין ההמתנה הנוכחית לבין הממוצע שלך
+  const k = Math.floor(r / 1.5);        // מדרגות של 1.5x
+  const parts = Math.max(1, k + 1);     // 1=בלי חיתוך, 2,3,4...
+
+  return wait / parts;
+}
+
 function computeAvgPuffs(){
   if(state.count === 0) return null;
   return state.puffsSum / state.count;
@@ -123,10 +136,26 @@ el.wantToSmoke.addEventListener("click", () => {
   if(wait === null){
     lines.push("לא הוגדר יעד דקות. קבע יעד כדי לקבל זמן המתנה מומלץ.");
   }else{
-    const w = Math.max(0, wait); // אם שלילי — כבר “מותר”
-    lines.push(`כדי להתיישר ליעד הדקות: מומלץ לחכות עוד ~ ${fmt(w, 0)} דקות.`);
+    const wRaw = Math.max(0, wait);
+    const wSplit = Math.max(0, splitWaitIfLarge(wRaw));
+
+    // בנה טקסט ידידותי: אם בוצעה חלוקה – נציין כמה חלקים
+    let txt = `כדי להתיישר ליעד הדקות: מומלץ לחכות ~ ${fmt(wSplit, 0)} דקות.`;
+    const avg = computeAvgMinutes();
+    if(avg){
+      const r = wRaw / avg;
+      const k = Math.floor(r / 1.5);
+      const parts = Math.max(1, k + 1);
+      if(parts > 1){
+        txt += ` (חלוקה ל-${parts} חלקים במקום ${fmt(wRaw,0)} בדקה אחת)`;
+      }
+    }
+    lines.push(txt);
+
     if(wait <= 0){
       lines.push("כבר הגעת/עברת את היעד – מותר לעשן עכשיו אם תרצה.");
+    }else{
+      lines.push("כמובן שאפשר להשלים את כל הזמן בפעם אחת אם תרצה — זו רק המלצה הדרגתית.");
     }
   }
 
@@ -171,6 +200,36 @@ el.didSmoke.addEventListener("click", () => {
   }
 
   saveState(state);
+  render();
+
+  el.advice.textContent = "עודכנו הנתונים. כל הכבוד על המעקב.";
+});
+
+el.resetAll.addEventListener("click", () => {
+  if(!confirm("לאפס את כל הנתונים?")){
+    return;
+  }
+  state = {
+    targetMinutes: state.targetMinutes, // אפשר להשאיר יעדים אם תרצה
+    targetPuffs: state.targetPuffs,
+    count: 0,
+    minutesSum: 0,
+    puffsSum: 0,
+    lastSmokeAt: null
+  };
+  saveState(state);
+  render();
+  el.advice.textContent = "נמחקו הנתונים. היעדים נשארו.";
+});
+
+// טיימר קטן שמעדכן "מאז הסיגריה האחרונה"
+setInterval(() => {
+  const since = minutesSince(state.lastSmokeAt);
+  el.sinceLast.textContent = since === null ? "—" : fmt(since);
+}, 10_000);
+
+// init
+render();  saveState(state);
   render();
 
   el.advice.textContent = "עודכנו הנתונים. כל הכבוד על המעקב.";
