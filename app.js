@@ -60,6 +60,23 @@ function computeAvgMinutes(){
   return state.minutesSum / state.count; // לפי השיטה שסיכמנו: מחלקים במס' הסיגריות
 }
 
+function minutesToWords(totalMinutes) {
+  const minutes = Math.max(0, Math.round(totalMinutes));
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+
+  let parts = [];
+  if (hours > 0) {
+    parts.push(hours === 1 ? "שעה" : `${hours} שעות`);
+  }
+  if (mins > 0) {
+    parts.push(`${mins} דקות`);
+  }
+  if (parts.length === 0) {
+    return "פחות מדקה";
+  }
+  return parts.join(" ו");
+}
 // הוסף פונקציה חדשה אחרי computeAvgMinutes()
 
 
@@ -152,11 +169,13 @@ el.wantToSmoke.addEventListener("click", () => {
 
   let lines = [];
 
-  if(waitRemain === null){
-    lines.push("לא הוגדר יעד דקות. קבע יעד כדי לקבל זמן המתנה מומלץ.");
-  }else{
-    lines.push(`מומלץ לחכות ~ ${fmt(waitRemain, 0)} דקות.`);
-  }
+  if (waitRemain === null){
+  lines.push("לא הוגדר יעד דקות. קבע יעד כדי לקבל זמן המתנה מומלץ.");
+}else{
+  const waitRounded = Math.round(waitRemain);
+  const waitWords = minutesToWords(waitRounded);
+  lines.push(`מומלץ לחכות ~ ${waitRounded} דקות (${waitWords}).`);
+}
 
   if(nextPuffs === null){
     lines.push("לא הוגדר יעד שכטות. קבע יעד כדי לקבל שכטות מומלצות.");
