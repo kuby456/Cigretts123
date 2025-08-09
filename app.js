@@ -61,17 +61,7 @@ function computeAvgMinutes(){
 }
 
 // הוסף פונקציה חדשה אחרי computeAvgMinutes()
-function splitWaitIfLarge(wait){
-  const avg = computeAvgMinutes();
-  if(wait == null || !Number.isFinite(wait)) return wait;
-  if(avg == null || !Number.isFinite(avg) || avg <= 0) return wait;
 
-  const r = wait / avg;                 // יחס בין ההמתנה הנוכחית לבין הממוצע שלך
-  const k = Math.floor(r / 1.5);        // מדרגות של 1.5x
-  const parts = Math.max(1, k + 1);     // 1=בלי חיתוך, 2,3,4...
-
-  return wait / parts;
-}
 
 function computeAvgPuffs(){
   if(state.count === 0) return null;
@@ -85,6 +75,19 @@ function requiredWaitMinutes(){
   const N = Number(state.count);
   const M = Number(state.minutesSum);
   return T * (N + 1) - M;
+}
+
+function fullDebtWaitDisplay(){
+  // מציגים תמיד: T + החוב המלא
+  // החוב המלא = requiredWaitMinutes() - T (אם חיובי)
+  // בפועל זה פשוט max(T, strict), כי:
+  // strict = T*(N+1) - M
+  const strict = requiredWaitMinutes();           // החישוב המדויק לממוצע מיידי
+  const T = Number(state.targetMinutes) || 0;
+  if(strict == null || T <= 0) return null;
+
+  // אם strict קטן מ-T או שלילי — עדיין מציגים לפחות T (מינימום)
+  return Math.max(T, strict);
 }
 
 function requiredNextPuffs(){
@@ -128,35 +131,16 @@ el.saveTargets.addEventListener("click", () => {
 });
 
 el.wantToSmoke.addEventListener("click", () => {
-  const wait = requiredWaitMinutes();
+  const waitShow  = fullDebtWaitDisplay();   // T + החוב המלא (או לפחות T)
   const nextPuffs = requiredNextPuffs();
 
   let lines = [];
 
-  if(wait === null){
+  if(waitShow === null){
     lines.push("לא הוגדר יעד דקות. קבע יעד כדי לקבל זמן המתנה מומלץ.");
   }else{
-    const wRaw = Math.max(0, wait);
-    const wSplit = Math.max(0, splitWaitIfLarge(wRaw));
-
-    // בנה טקסט ידידותי: אם בוצעה חלוקה – נציין כמה חלקים
-    let txt = `כדי להתיישר ליעד הדקות: מומלץ לחכות ~ ${fmt(wSplit, 0)} דקות.`;
-    const avg = computeAvgMinutes();
-    if(avg){
-      const r = wRaw / avg;
-      const k = Math.floor(r / 1.5);
-      const parts = Math.max(1, k + 1);
-      if(parts > 1){
-        txt += ` (חלוקה ל-${parts} חלקים במקום ${fmt(wRaw,0)} בדקה אחת)`;
-      }
-    }
-    lines.push(txt);
-
-    if(wait <= 0){
-      lines.push("כבר הגעת/עברת את היעד – מותר לעשן עכשיו אם תרצה.");
-    }else{
-      lines.push("כמובן שאפשר להשלים את כל הזמן בפעם אחת אם תרצה — זו רק המלצה הדרגתית.");
-    }
+    // מציגים רק את המספר הכולל, בלי פירוט חישוב
+    lines.push(`מומלץ לחכות ~ ${fmt(waitShow, 0)} דקות.`);
   }
 
   if(nextPuffs === null){
