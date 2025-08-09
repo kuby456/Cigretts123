@@ -229,34 +229,4 @@ setInterval(() => {
 }, 10_000);
 
 // init
-render();  saveState(state);
-  render();
-
-  el.advice.textContent = "עודכנו הנתונים. כל הכבוד על המעקב.";
-});
-
-el.resetAll.addEventListener("click", () => {
-  if(!confirm("לאפס את כל הנתונים?")){
-    return;
-  }
-  state = {
-    targetMinutes: state.targetMinutes, // אפשר להשאיר יעדים אם תרצה
-    targetPuffs: state.targetPuffs,
-    count: 0,
-    minutesSum: 0,
-    puffsSum: 0,
-    lastSmokeAt: null
-  };
-  saveState(state);
-  render();
-  el.advice.textContent = "נמחקו הנתונים. היעדים נשארו.";
-});
-
-// טיימר קטן שמעדכן "מאז הסיגריה האחרונה"
-setInterval(() => {
-  const since = minutesSince(state.lastSmokeAt);
-  el.sinceLast.textContent = since === null ? "—" : fmt(since);
-}, 10_000);
-
-// init
 render();
