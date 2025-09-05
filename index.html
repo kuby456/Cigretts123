@@ -2,112 +2,105 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>מעקב סיגריות ושכטות</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>משימות במקום סיגריה</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#121734; --muted:#9aa3b2; --text:#eaf0ff;
+      --accent:#6ea8fe; --accent2:#70e1a1; --danger:#ff7a7a; --warn:#ffd166;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Arial}
+    .wrap{max-width:560px;margin:0 auto;padding:18px}
+    h1{font-size:24px;margin:10px 0 14px;text-align:center}
+    .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);margin-bottom:20px}
+    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
+    .stat{background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
+    .stat .num{font-size:22px;font-weight:800}
+    .big-btn{
+      display:block;width:100%;border-radius:999px;font-size:22px;
+      padding:18px 20px;margin-bottom:16px;cursor:pointer;
+      background:linear-gradient(135deg,#6ea8fe 0%,#70e1a1 100%);
+      color:#05203b;font-weight:700;
+    }
+    .task{background:#1b2344;padding:12px;border-radius:12px;margin:8px 0;font-size:18px}
+    button.small{padding:10px 14px;border:none;border-radius:12px;font-size:15px;margin-top:10px;cursor:pointer}
+    .danger{background:var(--danger);color:#3a0a0a}
+  </style>
 </head>
 <body>
-  <header class="app-header">
-    <h1>מעקב סיגריות ושכטות</h1>
-  </header>
+  <div class="wrap">
+    <h1>משימות במקום סיגריה 🚭</h1>
+    <button class="big-btn" onclick="showTask()">בא לי סיגריה</button>
 
-  <main class="container">
-    <section class="card">
-      <h2>הגדרת יעדים</h2>
-      <div class="grid">
-        <label>
-          יעד דקות בין סיגריה לסיגריה
-          <input id="targetMinutes" type="number" min="1" step="1" placeholder="לדוגמה: 55"/>
-        </label>
-        <label>
-          יעד שכטות לסיגריה
-          <input id="targetPuffs" type="number" min="0" step="1" placeholder="לדוגמה: 8"/>
-        </label>
+    <div id="taskBox" class="card" style="display:none"></div>
+
+    <div class="card stats">
+      <div class="stat">
+        נפילות בסך הכל 
+        <span id="falls" class="num">0</span>
+        <button class="small danger" onclick="addFall()">נפלתי</button>
       </div>
-      <button id="saveTargets" class="btn primary">שמור יעדים</button>
-    </section>
-
-    <section class="card">
-      <h2>פעולות</h2>
-      <div class="actions">
-        <button id="wantToSmoke" class="btn">אני רוצה לעשן</button>
-        <button id="didSmoke" class="btn success">עישנתי עכשיו</button>
-        <button id="resetAll" class="btn danger">איפוס נתונים</button>
+      <div class="stat">
+        זמן שעבר מאז התחלה 
+        <span id="elapsed" class="num">0:00</span>
       </div>
-      <p id="advice" class="advice"></p>
-    </section>
-
-
-
-    <section class="card">
-      <h2>סטטוס נוכחי</h2>
-      <div class="stats">
-        <div><strong>מס׳ סיגריות:</strong> <span id="statCount">0</span></div>
-        <div>
-  <strong>ממוצע דקות בפועל:</strong>
-  <span id="statAvgMinutes">—</span>
-  <span class="muted">(<span id="statAvgMinutesWords">—</span>)</span>
-</div>
-        <div><strong>ממוצע שכטות בפועל:</strong> <span id="statAvgPuffs">—</span></div>
-        <div>
-  <strong>זמן מאז הסיגריה האחרונה:</strong>
-  <span id="sinceLast">—</span>
-  <span class="muted">(<span id="sinceLastWords">—</span>)</span>
-</div>
-        <div><strong>יעד דקות:</strong> <span id="targetMinutesView">—</span></div>
-        <div><strong>יעד שכטות:</strong> <span id="targetPuffsView">—</span></div>
-      </div>
-    </section>
-
-    <section class="card">
-  <h2>ריצה — טיימר וסטטיסטיקות</h2>
-
-  <div class="actions">
-    <button id="runStart" class="btn primary">התחל ריצה</button>
-    <button id="runStop" class="btn danger">עצור ריצה</button>
-  </div>
-
-  <div class="stats" style="margin-top:8px">
-    <div><strong>טיימר ריצה נוכחי:</strong> <span id="runTimer">—</span></div>
-    <div><strong>ממוצע זמן ריצה:</strong>
-      <span id="runAvgMinutes">—</span>
-      <span class="muted">(<span id="runAvgWords">—</span>)</span>
     </div>
-    <div><strong>מס' ריצות סה"כ:</strong> <span id="runTotalCount">0</span></div>
-    <div><strong>מס' ריצות השבוע:</strong> <span id="runWeekCount">0</span></div>
+
+    <button class="small" onclick="resetAll()">איפוס הכל</button>
   </div>
 
-  <small class="advice">
-    ספירת "השבוע" מתאפסת בכל יום ראשון ב-00:00 לפי שעון המכשיר.
-  </small>
-</section>
-    <section class="card">
-      <h2>מעגל יומי (08:00 → 08:00)</h2>
-      <div class="stats">
-        <div><strong>טווח המעגל:</strong> <span id="cycleWindow">—</span></div>
-        <div><strong>זמן עד סיום המעגל:</strong> <span id="cycleCountdown">—</span></div>
-        <div><strong>מס׳ סיגריות במעגל הנוכחי:</strong> <span id="cycleCount">0</span></div>
-      </div>
-      <small class="advice">המעגל מתאפס אוטומטית כל יום בשעה 08:00 לפי שעון המכשיר.</small>
-    </section>
-    
-    <section class="card">
-      <h2>הסבר קצר</h2>
-      <ol class="notes">
-        <li>בלחיצה על <em>“עישנתי עכשיו”</em> תתבקש/י להזין כמה שכטות לקחת. אם זו סיגריה ראשונה, מתחילים ספירה מעכשיו.</li>
-        <li>בלחיצה על <em>“אני רוצה לעשן”</em> תראה/י כמה זמן כדאי לחכות עכשיו כדי להגיע ליעד הדקות, וכמה שכטות כדאי לקחת בסיגריה הבאה כדי להגיע ליעד השכטות.</li>
-        <li>החישוב לדקות מתבסס על: <code>X = T*(N+1) - M</code><br/>
-          T=יעד דקות, N=מס׳ סיגריות עד עכשיו, M=סכום הדקות שנצברו עד עכשיו. </li>
-        <li>לחישוב שכטות בסיגריה הבאה: <code>p_next = S*(N+1) - P</code><br/>
-          S=יעד שכטות, P=סכום השכטות עד עכשיו.</li>
-      </ol>
-    </section>
-  </main>
+  <script>
+    const tasks = [
+      "להתקלח",
+      "לצחצח שיניים",
+      "לשתות כוס מים",
+      "לקחת מסטיק",
+      "לקחת לכסניה",
+      "לעשות סיבוב",
+      "לעשות סקווטים",
+      "לעשות שכיבות שמיכה",
+      "לעשות כפיפות בטן",
+      "תזכור: כל סיגריה מחמירה את החשק והנזק מצטבר"
+    ];
 
-  <footer class="app-footer">
-    <small>נשמר אוטומטית ב-LocalStorage.</small>
-  </footer>
+    let falls = parseInt(localStorage.getItem("falls")||"0");
+    let startTs = parseInt(localStorage.getItem("startTs")||Date.now());
 
-  <script src="app.js"></script>
+    document.getElementById("falls").textContent = falls;
+
+    function showTask(){
+      const box = document.getElementById("taskBox");
+      const rand = tasks[Math.floor(Math.random()*tasks.length)];
+      box.innerHTML = `<div class="task">${rand}</div>`;
+      box.style.display = "block";
+    }
+
+    function addFall(){
+      falls++;
+      localStorage.setItem("falls",falls);
+      document.getElementById("falls").textContent = falls;
+    }
+
+    function resetAll(){
+      localStorage.clear();
+      falls=0;startTs=Date.now();
+      localStorage.setItem("startTs",startTs);
+      document.getElementById("falls").textContent = 0;
+      document.getElementById("elapsed").textContent = "0:00";
+      document.getElementById("taskBox").style.display="none";
+    }
+
+    function updateElapsed(){
+      let diff = Date.now()-startTs;
+      let days = Math.floor(diff/(1000*60*60*24));
+      let hours = Math.floor((diff/(1000*60*60))%24);
+      let mins = Math.floor((diff/(1000*60))%60);
+      let text = days>0 ? `${days} ימים ${hours}:${mins.toString().padStart(2,'0')}` : `${hours}:${mins.toString().padStart(2,'0')}`;
+      document.getElementById("elapsed").textContent = text;
+    }
+    setInterval(updateElapsed,1000*30);
+    updateElapsed();
+  </script>
 </body>
 </html>
