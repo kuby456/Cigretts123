@@ -1,109 +1,533 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="he" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>משימות במקום סיגריה</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>אפליקציית הוצאות – לוקלי</title>
+
+  <!-- Heebo -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+
   <style>
     :root{
-      --bg:#0b1020; --card:#121734; --muted:#9aa3b2; --text:#eaf0ff;
-      --accent:#6ea8fe; --accent2:#70e1a1; --danger:#ff7a7a; --warn:#ffd166;
+      --bg:#ffffff;
+      --text:#111827;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --primary:#2563eb;
+      --accent:#10b981;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --card:#ffffff;
+      --shadow:0 8px 24px rgba(0,0,0,.08);
+      --radius:18px;
     }
-    *{box-sizing:border-box}
-    body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Arial}
-    .wrap{max-width:560px;margin:0 auto;padding:18px}
-    h1{font-size:24px;margin:10px 0 14px;text-align:center}
-    .card{background:var(--card);border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.25);margin-bottom:20px}
-    .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center}
-    .stat{background:rgba(255,255,255,.04);border-radius:12px;padding:10px}
-    .stat .num{font-size:22px;font-weight:800}
-    .big-btn{
-      display:block;width:100%;border-radius:999px;font-size:22px;
-      padding:18px 20px;margin-bottom:16px;cursor:pointer;
-      background:linear-gradient(135deg,#6ea8fe 0%,#70e1a1 100%);
-      color:#05203b;font-weight:700;
+    *{ box-sizing:border-box; }
+    html, body{ margin:0; height:100%; background:var(--bg); color:var(--text); font-family:"Heebo", Arial, sans-serif; }
+    .container{ max-width:1000px; margin:0 auto; padding:24px 16px 56px; }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:16px;
+      background:linear-gradient(180deg, #f3f6ff, #fff);
+      border:1px solid var(--border);
+      border-radius:var(--radius); padding:16px 18px; box-shadow:var(--shadow); margin-top:20px;
     }
-    .task{background:#1b2344;padding:12px;border-radius:12px;margin:8px 0;font-size:18px}
-    button.small{padding:10px 14px;border:none;border-radius:12px;font-size:15px;margin-top:10px;cursor:pointer}
-    .danger{background:var(--danger);color:#3a0a0a}
+    h1{ font-size:clamp(22px, 3.5vw, 34px); margin:0; }
+    .sub{ color:var(--muted); margin:6px 0 0; }
+    .grid{ display:grid; grid-template-columns: repeat(12, 1fr); gap:16px; margin-top:18px; }
+    .col-4{ grid-column: span 4; }
+    .col-6{ grid-column: span 6; }
+    .col-8{ grid-column: span 8; }
+    .col-12{ grid-column: span 12; }
+    @media (max-width: 900px){
+      .col-4, .col-6, .col-8 { grid-column: span 12; }
+    }
+
+    .card{
+      background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+      padding:18px; box-shadow:var(--shadow);
+    }
+    .card h3{ margin:0 0 10px; font-size:20px; }
+    .muted{ color:var(--muted); }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input[type="number"], input[type="text"], select{
+      padding:12px 14px; border:1px solid var(--border); border-radius:12px; outline:none; min-width:180px;
+    }
+    input:focus, select:focus{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(37,99,235,.12); }
+
+    button{
+      border:0; padding:12px 16px; border-radius:12px; cursor:pointer;
+      background:var(--primary); color:#fff; font-weight:700; transition:transform .05s ease;
+    }
+    button.ghost{ background:#eef2ff; color:#1f2937; }
+    button.green{ background:var(--accent); }
+    button.warn{ background:var(--warn); }
+    button.red{ background:var(--danger); }
+    button:active{ transform:translateY(1px); }
+
+    .kpi{
+      display:flex; flex-direction:column; gap:4px;
+      padding:14px; border:1px dashed var(--border); border-radius:14px; background:#fcfcff;
+    }
+    .kpi big{ font-size:22px; font-weight:800; }
+    .kpi small{ color:var(--muted); }
+
+    .list{
+      max-height:260px; overflow:auto; border:1px solid var(--border);
+      border-radius:12px; padding:8px;
+    }
+    .item{
+      display:flex; justify-content:space-between; align-items:center;
+      padding:10px 12px; border-bottom:1px dashed #eee; gap:8px;
+    }
+    .item:last-child{ border-bottom:0; }
+    .pill{ font-size:12px; padding:4px 8px; background:#f3f4f6; border-radius:999px; color:#374151; }
+
+    footer{ text-align:center; color:#9aa3af; font-size:13px; margin-top:28px; }
+    .hint{ font-size:13px; color:#6b7280; }
   </style>
 </head>
 <body>
-  <span style="display:block; text-align:center; font-weight:bold; font-size:26px; margin:20px 0;">
-  אסור אסור אסור לי לעשן זה מסוכן לי
-</span>
-  <div class="wrap">
-    <h1>משימות במקום סיגריה 🚭</h1>
-    <button class="big-btn" onclick="showTask()">בא לי סיגריה</button>
-
-    <div id="taskBox" class="card" style="display:none"></div>
-
-    <div class="card stats">
-      <div class="stat">
-        נפילות בסך הכל 
-        <span id="falls" class="num">0</span>
-        <button class="small danger" onclick="addFall()">נפלתי</button>
+  <div class="container">
+    <header>
+      <div>
+        <h1>ניהול הוצאות – לשימוש אישי</h1>
+        <p class="sub">הכל נשמר ב־localStorage על המכשיר שלך. לא נשלח לשום שרת.</p>
       </div>
-      <div class="stat">
-        זמן שעבר מאז התחלה 
-        <span id="elapsed" class="num">0:00</span>
+      <div class="row">
+        <select id="currency">
+          <option value="₪">₪ ש"ח</option>
+          <option value="$">$ דולר</option>
+          <option value="€">€ יורו</option>
+        </select>
+        <button id="exportBtn" class="ghost">ייצוא JSON</button>
+        <button id="importBtn" class="ghost">ייבוא JSON</button>
       </div>
-    </div>
+    </header>
 
-    <button class="small" onclick="resetAll()">איפוס הכל</button>
+    <!-- הזנת קניה -->
+    <section class="grid">
+      <div class="col-8 card">
+        <h3>קניה חדשה</h3>
+        <div class="row">
+          <input id="amountInput" type="number" inputmode="decimal" placeholder="כמה קנית?" step="0.01" />
+          <input id="noteInput" type="text" placeholder="הערה (לא חובה)" />
+          <button id="addBtn" class="green">הוסף קניה</button>
+          <button id="quick20" class="ghost">+20</button>
+          <button id="quick50" class="ghost">+50</button>
+          <button id="quick100" class="ghost">+100</button>
+        </div>
+        <p class="hint" style="margin-top:8px">טיפ: אפשר להוסיף במהירות עם הכפתורים, ואז "הוסף קניה".</p>
+
+        <div class="list" id="list"></div>
+
+        <div class="row" style="margin-top:10px">
+          <button id="undoBtn" class="warn">בטל קניה אחרונה</button>
+          <button id="clearAllBtn" class="red">אפס הכל</button>
+        </div>
+      </div>
+
+      <!-- הגדרות הכנסה/חיסכון -->
+      <div class="col-4 card">
+        <h3>הגדרות חודשיות</h3>
+        <div class="row" style="margin-top:8px">
+          <input id="incomeInput" type="number" inputmode="decimal" placeholder="הכנסה חודשית (₪)" step="0.01" />
+          <button id="saveIncomeBtn">שמור הכנסה</button>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <input id="savingInput" type="number" inputmode="decimal" placeholder="חיסכון חודשי (₪)" step="0.01" />
+          <button id="saveSavingBtn">שמור חיסכון</button>
+        </div>
+        <p class="hint">בעת שמירת ההכנסה בפעם הראשונה, נקבע "מועד התחלה" שממנו מחושבת היתרה המצטברת.</p>
+        <div style="margin-top:10px" class="kpi">
+          <small>הכנסה חודשית</small><big id="incomeKpi">—</big>
+          <small>חיסכון חודשי</small><big id="savingKpi">—</big>
+          <small>התחלה מאז</small><big id="startKpi">—</big>
+        </div>
+      </div>
+    </section>
+
+    <!-- סטטיסטיקות -->
+    <section class="grid">
+      <div class="col-4 card">
+        <h3>היום</h3>
+        <div class="kpi"><small>עסקאות</small><big id="todayCount">0</big></div>
+        <div class="kpi"><small>סכום כולל</small><big id="todaySum">—</big></div>
+        <div class="kpi"><small>ממוצע לעסקה</small><big id="todayAvg">—</big></div>
+      </div>
+
+      <div class="col-4 card">
+        <h3>השבוע (א׳–ש׳)</h3>
+        <div class="kpi"><small>עסקאות</small><big id="weekCount">0</big></div>
+        <div class="kpi"><small>סכום כולל</small><big id="weekSum">—</big></div>
+        <div class="kpi"><small>ממוצע לעסקה</small><big id="weekAvg">—</big></div>
+        <div class="kpi"><small>ממוצע ליום</small><big id="weekPerDay">—</big></div>
+      </div>
+
+      <div class="col-4 card">
+        <h3>החודש</h3>
+        <div class="kpi"><small>עסקאות</small><big id="monthCount">0</big></div>
+        <div class="kpi"><small>סכום כולל</small><big id="monthSum">—</big></div>
+        <div class="kpi"><small>ממוצע לעסקה</small><big id="monthAvg">—</big></div>
+        <div class="kpi"><small>ממוצע ליום</small><big id="monthPerDay">—</big></div>
+      </div>
+    </section>
+
+    <!-- תקציב/בנק -->
+    <section class="grid">
+      <div class="col-6 card">
+        <h3>תקציב חודשי</h3>
+        <p class="muted">כמה נשאר החודש מתוך ההכנסה לאחר חיסכון והוצאות.</p>
+        <div class="kpi"><small>הכנסה</small><big id="budgetIncome">—</big></div>
+        <div class="kpi"><small>חיסכון</small><big id="budgetSaving">—</big></div>
+        <div class="kpi"><small>הוצאות החודש</small><big id="budgetSpent">—</big></div>
+        <div class="kpi"><small>נותר לחודש</small><big id="budgetLeft">—</big></div>
+      </div>
+
+      <div class="col-6 card">
+        <h3>יתרה “כמו בנק”</h3>
+        <p class="hint">
+          חישוב היתרה נעשה <b>מאז מועד ההתחלה</b> (כשתשמור/י הכנסה לראשונה) ככה:
+          הכנסה חודשית נצברת ליניארית לאורך הזמן − הוצאות שנרשמו − חלק יחסי של החיסכון.
+        </p>
+        <div class="kpi"><small>יתרה משוערת</small><big id="bankBalance">—</big></div>
+        <div class="kpi"><small>חלף זמן</small><big id="elapsedText">—</big></div>
+      </div>
+    </section>
+
+    <footer>נבנה עבורך. אפשר להרחיב בלחיצת כפתור בעתיד (קטגוריות, גרפים, ייצוא לקובץ ועוד).</footer>
   </div>
 
   <script>
-    const tasks = [
-      "להתקלח",
-      "לצחצח שיניים",
-      "לשתות כוס מים",
-      "לקחת מסטיק",
-      "לקחת לכסניה",
-      "לעשות סיבוב",
-      "לעשות סקווטים",
-      "לעשות שכיבות שמיכה",
-      "לעשות כפיפות בטן",
-      "תזכור: כל סיגריה מחמירה את החשק והנזק מצטבר"
-    ];
+    /************** כלי תאריכים **************/
+    const fmt = (n, cur) => isFinite(n) ? `${cur}${n.toFixed(2)}` : '—';
+    const dayStart = (d=new Date()) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    // שבוע בישראל מתחיל ביום ראשון
+    const weekStart = (d=new Date()) => {
+      const day = d.getDay(); // 0=א׳? בדפדפן 0=ראשון? (ב-JS: 0=Sunday)
+      const diff = (day + 6) % 7; // כמה ימים אחורה להגיע לראשון
+      const base = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      base.setDate(base.getDate() - diff);
+      return base;
+    };
+    const monthStart = (d=new Date()) => new Date(d.getFullYear(), d.getMonth(), 1);
+    const startOf = {
+      today: () => dayStart(new Date()),
+      week:  () => weekStart(new Date()),
+      month: () => monthStart(new Date())
+    };
+    const daysInMonth = (y,m) => new Date(y, m+1, 0).getDate();
+    const clamp0 = n => Math.max(0, n||0);
 
-    let falls = parseInt(localStorage.getItem("falls")||"0");
-    let startTs = parseInt(localStorage.getItem("startTs")||Date.now());
+    /************** אחסון **************/
+    const LS_KEY = 'xpurchases_v1';
+    const LS_SETTINGS = 'xsettings_v1';
 
-    document.getElementById("falls").textContent = falls;
+    const loadPurchases = () => {
+      try{ return JSON.parse(localStorage.getItem(LS_KEY)) || []; }
+      catch{ return []; }
+    };
+    const savePurchases = (arr) => localStorage.setItem(LS_KEY, JSON.stringify(arr));
 
-    function showTask(){
-      const box = document.getElementById("taskBox");
-      const rand = tasks[Math.floor(Math.random()*tasks.length)];
-      box.innerHTML = `<div class="task">${rand}</div>`;
-      box.style.display = "block";
+    const loadSettings = () => {
+      try{
+        return Object.assign({
+          income: 0, saving: 0, currency: '₪',
+          startEpoch: null // מתי הוגדרה הכנסה לראשונה
+        }, JSON.parse(localStorage.getItem(LS_SETTINGS)) || {});
+      }catch{
+        return { income:0, saving:0, currency:'₪', startEpoch:null };
+      }
+    };
+    const saveSettings = (s) => localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
+
+    let purchases = loadPurchases(); // [{amount, note, ts}]
+    let settings = loadSettings();
+
+    /************** DOM **************/
+    const $ = sel => document.querySelector(sel);
+    const amountInput = $('#amountInput');
+    const noteInput   = $('#noteInput');
+    const addBtn      = $('#addBtn');
+    const quick20     = $('#quick20');
+    const quick50     = $('#quick50');
+    const quick100    = $('#quick100');
+    const listEl      = $('#list');
+    const undoBtn     = $('#undoBtn');
+    const clearAllBtn = $('#clearAllBtn');
+
+    const incomeInput = $('#incomeInput');
+    const savingInput = $('#savingInput');
+    const saveIncomeBtn = $('#saveIncomeBtn');
+    const saveSavingBtn = $('#saveSavingBtn');
+
+    const currencySel = $('#currency');
+    const exportBtn   = $('#exportBtn');
+    const importBtn   = $('#importBtn');
+
+    // KPI elements
+    const todayCount = $('#todayCount'), todaySum = $('#todaySum'), todayAvg = $('#todayAvg');
+    const weekCount  = $('#weekCount'),  weekSum  = $('#weekSum'),  weekAvg  = $('#weekAvg'), weekPerDay = $('#weekPerDay');
+    const monthCount = $('#monthCount'), monthSum = $('#monthSum'), monthAvg = $('#monthAvg'), monthPerDay = $('#monthPerDay');
+
+    const incomeKpi = $('#incomeKpi'), savingKpi = $('#savingKpi'), startKpi = $('#startKpi');
+    const budgetIncome = $('#budgetIncome'), budgetSaving = $('#budgetSaving'), budgetSpent = $('#budgetSpent'), budgetLeft = $('#budgetLeft');
+    const bankBalance = $('#bankBalance'), elapsedText = $('#elapsedText');
+
+    /************** עזר לחישובים **************/
+    const byRange = (from, to=new Date()) => purchases.filter(p => p.ts >= +from && p.ts <= +to);
+    const sum = arr => arr.reduce((s, x) => s + (+x.amount||0), 0);
+    const avg = arr => arr.length ? sum(arr)/arr.length : NaN;
+
+    // חישוב ממוצע ליום עבור טווח: סכום / #ימים שעברו (לפחות 1)
+    const perDay = (arr, from, to=new Date()) => {
+      const days = Math.max(1, Math.ceil((+to - +from) / (1000*60*60*24)));
+      return sum(arr) / days;
+    };
+
+    /************** רענון רשימה **************/
+    function renderList(){
+      if (!purchases.length){
+        listEl.innerHTML = `<div class="item"><span class="muted">אין עסקאות עדיין</span></div>`;
+        return;
+      }
+      const cur = settings.currency || '₪';
+      const rows = purchases.slice().reverse().map((p, idx) => {
+        const d = new Date(p.ts);
+        const time = d.toLocaleString('he-IL');
+        const note = p.note ? `<span class="pill">${escapeHtml(p.note)}</span>` : '';
+        return `
+          <div class="item">
+            <div>
+              <strong>${cur}${(+p.amount).toFixed(2)}</strong>
+              ${note}
+              <div class="muted" style="font-size:12px">${time}</div>
+            </div>
+            <button class="ghost red" data-del="${p.ts}">מחק</button>
+          </div>`;
+      }).join('');
+      listEl.innerHTML = rows;
+
+      // האזנה למחיקה
+      listEl.querySelectorAll('[data-del]').forEach(btn=>{
+        btn.addEventListener('click', () => {
+          const ts = +btn.getAttribute('data-del');
+          purchases = purchases.filter(p => p.ts !== ts);
+          savePurchases(purchases);
+          refreshAll();
+        });
+      });
     }
 
-    function addFall(){
-      falls++;
-      localStorage.setItem("falls",falls);
-      document.getElementById("falls").textContent = falls;
+    /************** רענון מדדים **************/
+    function refreshStats(){
+      const cur = settings.currency || '₪';
+      const now = new Date();
+      const t0 = startOf.today(), w0 = startOf.week(), m0 = startOf.month();
+
+      const tArr = byRange(t0, now);
+      const wArr = byRange(w0, now);
+      const mArr = byRange(m0, now);
+
+      // היום
+      todayCount.textContent = tArr.length;
+      todaySum.textContent   = fmt(sum(tArr), cur);
+      todayAvg.textContent   = fmt(avg(tArr), cur);
+
+      // השבוע
+      weekCount.textContent  = wArr.length;
+      weekSum.textContent    = fmt(sum(wArr), cur);
+      weekAvg.textContent    = fmt(avg(wArr), cur);
+      weekPerDay.textContent = fmt(perDay(wArr, w0, now), cur);
+
+      // החודש
+      monthCount.textContent = mArr.length;
+      monthSum.textContent   = fmt(sum(mArr), cur);
+      monthAvg.textContent   = fmt(avg(mArr), cur);
+      monthPerDay.textContent= fmt(perDay(mArr, m0, now), cur);
+
+      // תקציב חודשי
+      const spentMonth = sum(mArr);
+      budgetIncome.textContent = fmt(settings.income || 0, cur);
+      budgetSaving.textContent = fmt(settings.saving || 0, cur);
+      budgetSpent.textContent  = fmt(spentMonth, cur);
+      const left = clamp0((settings.income||0) - (settings.saving||0) - spentMonth);
+      budgetLeft.textContent   = fmt(left, cur);
+
+      // KPI הגדרות
+      incomeKpi.textContent = fmt(settings.income || 0, cur);
+      savingKpi.textContent = fmt(settings.saving || 0, cur);
+      startKpi.textContent  = settings.startEpoch ? new Date(settings.startEpoch).toLocaleString('he-IL') : '—';
+
+      // יתרה “כמו בנק”
+      bankLike();
     }
 
-    function resetAll(){
-      localStorage.clear();
-      falls=0;startTs=Date.now();
-      localStorage.setItem("startTs",startTs);
-      document.getElementById("falls").textContent = 0;
-      document.getElementById("elapsed").textContent = "0:00";
-      document.getElementById("taskBox").style.display="none";
+    // יתרה מאז startEpoch: הכנסה נצברת ליניארית − הוצאות − חיסכון יחסי
+    function bankLike(){
+      const cur = settings.currency || '₪';
+      if (!settings.startEpoch || !(settings.income>0)){
+        bankBalance.textContent = '—';
+        elapsedText.textContent = '—';
+        return;
+      }
+      const now = new Date();
+      const start = new Date(settings.startEpoch);
+      const elapsedMs = Math.max(0, +now - +start);
+
+      // קצב הכנסה/חיסכון לשניה (מניחים חודש ממוצע 30.437 ימים)
+      const secondsInMonth = 30.437 * 24 * 3600;
+      const incomePerSec = (settings.income || 0) / secondsInMonth;
+      const savingPerSec = (settings.saving || 0) / secondsInMonth;
+
+      const accruedIncome = incomePerSec * (elapsedMs/1000);
+      const accruedSaving = savingPerSec * (elapsedMs/1000);
+
+      const spentSinceStart = sum(purchases.filter(p => p.ts >= settings.startEpoch));
+
+      const balance = accruedIncome - accruedSaving - spentSinceStart;
+
+      bankBalance.textContent = fmt(balance, cur);
+      elapsedText.textContent = humanizeDuration(elapsedMs);
     }
 
-    function updateElapsed(){
-      let diff = Date.now()-startTs;
-      let days = Math.floor(diff/(1000*60*60*24));
-      let hours = Math.floor((diff/(1000*60*60))%24);
-      let mins = Math.floor((diff/(1000*60))%60);
-      let text = days>0 ? `${days} ימים ${hours}:${mins.toString().padStart(2,'0')}` : `${hours}:${mins.toString().padStart(2,'0')}`;
-      document.getElementById("elapsed").textContent = text;
+    function humanizeDuration(ms){
+      const s = Math.floor(ms/1000);
+      const d = Math.floor(s/86400);
+      const h = Math.floor((s%86400)/3600);
+      const m = Math.floor((s%3600)/60);
+      return `${d} ימים, ${h} שעות, ${m} דק׳`;
     }
-    setInterval(updateElapsed,1000*30);
-    updateElapsed();
+
+    /************** אירועים **************/
+    function addPurchase(amount, note=''){
+      const a = +amount;
+      if (!(a>0)) return;
+      purchases.push({ amount:a, note:String(note||'').slice(0,140), ts: Date.now() });
+      savePurchases(purchases);
+      amountInput.value = '';
+      noteInput.value = '';
+      refreshAll();
+    }
+
+    addBtn.addEventListener('click', () => addPurchase(amountInput.value, noteInput.value));
+    [quick20, quick50, quick100].forEach(btn=>{
+      btn.addEventListener('click', () => {
+        amountInput.value = (+amountInput.value||0) + (+btn.textContent.replace('+',''));
+      });
+    });
+
+    undoBtn.addEventListener('click', () => {
+      if (!purchases.length) return;
+      purchases.pop();
+      savePurchases(purchases);
+      refreshAll();
+    });
+
+    clearAllBtn.addEventListener('click', () => {
+      if (!confirm('את/ה בטוח/ה שרוצה לאפס הכל?')) return;
+      purchases = [];
+      savePurchases(purchases);
+      // לא מוחקים הגדרות, רק עסקאות
+      refreshAll();
+    });
+
+    saveIncomeBtn.addEventListener('click', () => {
+      const v = +incomeInput.value;
+      if (!(v>0)) return;
+      // אם אין startEpoch – קובעים עכשיו
+      if (!settings.startEpoch) settings.startEpoch = Date.now();
+      settings.income = v;
+      saveSettings(settings);
+      incomeInput.value = '';
+      refreshAll();
+    });
+
+    saveSavingBtn.addEventListener('click', () => {
+      const v = +savingInput.value;
+      settings.saving = clamp0(v);
+      saveSettings(settings);
+      savingInput.value = '';
+      refreshAll();
+    });
+
+    currencySel.value = settings.currency || '₪';
+    currencySel.addEventListener('change', () => {
+      settings.currency = currencySel.value;
+      saveSettings(settings);
+      refreshAll();
+    });
+
+    // ייצוא/ייבוא
+    exportBtn.addEventListener('click', () => {
+      const payload = {
+        purchases, settings, exportedAt: new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'expenses-export.json';
+      document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+    });
+
+    importBtn.addEventListener('click', async () => {
+      const inp = document.createElement('input');
+      inp.type = 'file'; inp.accept = 'application/json';
+      inp.onchange = () => {
+        const file = inp.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try{
+            const data = JSON.parse(reader.result);
+            if (Array.isArray(data.purchases)) purchases = data.purchases;
+            if (data.settings) settings = Object.assign(settings, data.settings);
+            savePurchases(purchases); saveSettings(settings);
+            refreshAll();
+            alert('הייבוא הושלם.');
+          }catch(e){
+            alert('קובץ לא תקין.');
+          }
+        };
+        reader.readAsText(file);
+      };
+      inp.click();
+    });
+
+    /************** עזר **************/
+    function escapeHtml(s){
+      return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function refreshAll(){
+      renderList();
+      refreshStats();
+    }
+
+    // אתחול ראשוני
+    refreshAll();
+
+    // רענון חי כדי שהיתרה "כמו בנק" תתקדם
+    setInterval(() => bankLike(), 10_000);
+
+    // רענון בעת חציית חצות/ראשון/א׳ בחודש – חישוב מחדש של טווחים
+    // נבדוק כל דקה אם עברנו גבול יום/שבוע/חודש
+    let signature = signatureForNow();
+    setInterval(()=>{
+      const sig = signatureForNow();
+      if (sig !== signature){ signature = sig; refreshAll(); }
+    }, 60_000);
+
+    function signatureForNow(){
+      const n = new Date();
+      return [
+        n.getFullYear(), n.getMonth(), n.getDate(),
+        weekStart(n).toISOString().slice(0,10)
+      ].join('|');
+    }
   </script>
 </body>
 </html>
